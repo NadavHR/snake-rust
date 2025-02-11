@@ -4,7 +4,7 @@ const GRID_HEIGHT: u32 = 15;
 const GRID_UNIT_SIZE: u8 = 40;
 const SEGMENT_SIZE: u8 = 30;
 const APPLE_SIZE: u8 = 30;
-// static mut field: [[bool; GRID_WIDTH as usize]; GRID_HEIGHT as usize] = [[false; GRID_WIDTH as usize]; GRID_HEIGHT as usize];
+const FRAME_DELTA_TIME_MILIS: u32 = 125;
 static mut apple_x: u32 = 10;
 static mut apple_y: u32 = 7;
 
@@ -139,33 +139,42 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
 
 fn main() {
     let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::LEFT, x: 5, y: 5}, next: None });
+    let mut last_time: u32;
     // println!("Hello, world!");
     unsafe {
         init(GRID_WIDTH as i32, GRID_HEIGHT as i32, GRID_UNIT_SIZE, SEGMENT_SIZE, APPLE_SIZE);
         set_title("test".as_ptr());
+        last_time = get_time_milis();
     }
     loop {
+        let cur_time: u32;
+        unsafe {
+            update_SDL();
+            cur_time = get_time_milis();
+        }
         let new_dir = find_new_direction(&head);
 
         
-        unsafe {
-            update_SDL();
-            clear_screen();
-        }
-        head = handle_game_logic(head, new_dir);
-        let mut cur = &head;
-        loop {
-            unsafe{
-                draw_segment(cur.value.x, cur.value.y, cur.value.direction);
+        if (cur_time - last_time) >= FRAME_DELTA_TIME_MILIS {
+            last_time = cur_time;
+            head = handle_game_logic(head, new_dir);
+            let mut cur = &head;
+            unsafe {
+                clear_screen();
             }
-            match cur.next {
-                None => {break;},
-                Some(ref next) => {cur = next.borrow()}
+            loop {
+                unsafe{
+                    draw_segment(cur.value.x, cur.value.y, cur.value.direction);
+                }
+                match cur.next {
+                    None => {break;},
+                    Some(ref next) => {cur = next}
+                }
             }
-        }
-        unsafe {
-            draw_apple(apple_x, apple_y);
-            render();
+            unsafe {
+                draw_apple(apple_x, apple_y);
+                render();
+            }
         }
         if false {
             break;
