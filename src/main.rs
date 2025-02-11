@@ -133,7 +133,11 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
         }
     }
     let mut new_head = LinkedListNode{ value: SnakeSegment{direction: new_dir, x: x, y: y}, next: Some(head) };
-    new_head.delete_end();
+    unsafe {
+        if !(x == apple_x && y == apple_y) {
+            new_head.delete_end();
+        }
+    }
     Box::new(new_head)
 }
 
