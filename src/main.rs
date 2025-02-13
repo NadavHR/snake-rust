@@ -136,6 +136,22 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
     let mut new_head = LinkedListNode{ value: SnakeSegment{direction: new_dir, x: x, y: y}, next: Some(head) };
     if !unsafe {x == apple_x && y == apple_y} {
         new_head.delete_end();
+        match new_head.next {
+            None => {},
+            Some(ref next_ref) => {
+                let mut cur = next_ref;
+                loop {
+                    if cur.value.x == new_head.value.x && cur.value.y == new_head.value.y {
+                        unsafe { game_over = true; }
+                        break;
+                    }
+                    match cur.next {
+                        None => {break;},
+                        Some(ref next_ref) => {cur = next_ref}
+                    }
+                }
+            }
+        }
     } else {
         unsafe { score += 1; };
     }
@@ -146,7 +162,7 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
 fn main() {
     let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::RIGHT, x: 0, y: 0}, next: None });
     let mut last_time: u32;
-    // println!("Hello, world!");
+
     unsafe {
         init(GRID_WIDTH as i32, GRID_HEIGHT as i32, GRID_UNIT_SIZE, SEGMENT_SIZE, APPLE_SIZE);
         last_time = get_time_milis();
