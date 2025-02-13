@@ -99,8 +99,7 @@ impl<T: Display> fmt::Display for LinkedListNode<T> {
     } 
 }
 
-fn find_new_direction(head: &Box<LinkedListNode<SnakeSegment>>) -> SegmentDirection {
-    let mut cur_dir: SegmentDirection = head.value.direction;
+fn find_new_direction(mut cur_dir: SegmentDirection) -> SegmentDirection {
     unsafe {
         match cur_dir {
             SegmentDirection::UP => {down = false},
@@ -189,6 +188,7 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
 fn main() {
     let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::RIGHT, x: 0, y: 0}, next: None });
     let mut last_time: u32;
+    let mut next_dir = head.value.direction; 
 
     unsafe {
         init(GRID_WIDTH as i32, GRID_HEIGHT as i32, GRID_UNIT_SIZE, SEGMENT_SIZE, APPLE_SIZE);
@@ -201,12 +201,12 @@ fn main() {
             update_SDL();
             cur_time = get_time_milis();
         }
-        let new_dir = find_new_direction(&head);
+        next_dir = find_new_direction(next_dir);
 
         
         if (cur_time - last_time) >= FRAME_DELTA_TIME_MILIS {
             last_time = cur_time;
-            head = handle_game_logic(head, new_dir);
+            head = handle_game_logic(head, next_dir);
             let mut cur = &head;
             unsafe {
                 set_title(CString::new(format!("score:  {score}").as_str()).unwrap().as_bytes_with_nul().as_ptr());
