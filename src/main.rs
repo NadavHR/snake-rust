@@ -133,16 +133,15 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
         }
     }
     let mut new_head = LinkedListNode{ value: SnakeSegment{direction: new_dir, x: x, y: y}, next: Some(head) };
-    unsafe {
-        if !(x == apple_x && y == apple_y) {
-            new_head.delete_end();
-        }
+    if !unsafe {x == apple_x && y == apple_y} {
+        new_head.delete_end();
     }
+    
     Box::new(new_head)
 }
 
 fn main() {
-    let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::LEFT, x: 5, y: 5}, next: None });
+    let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::RIGHT, x: 0, y: 0}, next: None });
     let mut last_time: u32;
     // println!("Hello, world!");
     unsafe {
@@ -180,8 +179,11 @@ fn main() {
                 render();
             }
         }
-        if false {
-            break;
+        unsafe {
+            if game_over {
+                finish_game();
+                break;
+            }
         }
     }
 

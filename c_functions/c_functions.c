@@ -29,16 +29,28 @@ void clear_screen() {
 
 void draw_segment(unsigned int segment_x, unsigned int segment_y, enum SegmentDirection dir)
 {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 0);
-    // TODO: add the connection of nearby segments by direction of segment
+    SDL_SetRenderDrawColor(renderer, 140, 255, 50, 0);
+    int x_extra = (dir == LEFT) ? 0 : (dir == RIGHT) ? -_segment_connection_size : 0;
+    int y_extra = (dir == UP) ? 0 : (dir == DOWN) ? -_segment_connection_size : 0;
     SDL_Rect b = {
+        .h = _segment_size + ((dir == UP) ? _segment_connection_size : (dir == DOWN) ? _segment_connection_size : 0),
+        .w = _segment_size + ((dir == LEFT) ? _segment_connection_size : (dir == RIGHT) ? _segment_connection_size : 0),
+        .x = (int)(segment_x * _grid_unit_size) + x_extra,
+        .y = (int)(segment_y * _grid_unit_size) + y_extra
+    };
+    
+
+    SDL_RenderFillRect(renderer, &b);
+    SDL_SetRenderDrawColor(renderer, 30, 190, 20, 0);
+    SDL_Rect t = {
         .h = _segment_size,
         .w = _segment_size,
         .x = (int)(segment_x * _grid_unit_size),
         .y = (int)(segment_y * _grid_unit_size)
     };
 
-    SDL_RenderFillRect(renderer, &b);
+    SDL_RenderFillRect(renderer, &t);
+
 }
 
 void draw_apple(unsigned int apple_x, unsigned int apple_y)
@@ -82,7 +94,6 @@ uint32_t get_time_milis() {
 }
 
 void finish_game() {
-    game_over = true;
     SDL_DestroyWindow(win);
     SDL_Quit();
 }
@@ -97,7 +108,7 @@ void update_SDL(){
         switch (window_event.type)
         {
         case SDL_QUIT:
-            finish_game();
+            game_over = true;
             break;
         case SDL_KEYDOWN:
             switch (window_event.key.keysym.scancode)
