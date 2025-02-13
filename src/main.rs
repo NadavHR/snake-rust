@@ -1,3 +1,4 @@
+use rand::prelude::*;
 use std::{borrow::{Borrow, BorrowMut}, ffi::CString, fmt::{self, Display}};
 const GRID_WIDTH: u32 = 20;
 const GRID_HEIGHT: u32 = 15;
@@ -5,6 +6,8 @@ const GRID_UNIT_SIZE: u8 = 40;
 const SEGMENT_SIZE: u8 = 30;
 const APPLE_SIZE: u8 = 30;
 const FRAME_DELTA_TIME_MILIS: u32 = 125;
+const GRID_SEGMENTS_COUNT: u32 = GRID_HEIGHT * GRID_WIDTH;  
+
 static mut apple_x: u32 = 10;
 static mut apple_y: u32 = 7;
 static mut score: u32 = 0;
@@ -121,6 +124,37 @@ fn find_new_direction(head: &Box<LinkedListNode<SnakeSegment>>) -> SegmentDirect
     cur_dir
 }
 
+fn is_pos_in_snake(mut cur: &Box<LinkedListNode<SnakeSegment>>, x: u32, y: u32) -> bool {
+    loop {
+        if cur.value.x == x && cur.value.y == y {
+            return true;
+        }
+        match cur.next {
+            None => {return false;},
+            Some(ref next_ref) => {cur = next_ref}
+        }
+    }
+}
+
+fn spawn_apple(head: &Box<LinkedListNode<SnakeSegment>>) {
+    // TODO: switch to a normal algorithm without a potentially infinite runtime
+    let mut rng = rand::rng();
+    loop {
+        let mut x: u32 = rng.random();
+        x = x % GRID_WIDTH;
+        let mut y: u32 = rng.random();
+        y = y % GRID_HEIGHT;
+        if !is_pos_in_snake(&head, x, y) {
+            unsafe {
+                apple_x = x;
+                apple_y = y;
+            }
+            break;
+        }
+    }
+
+}
+
 fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDirection) -> Box<LinkedListNode<SnakeSegment>> {
     let mut x: u32 = head.value.x;
     let mut y: u32 = head.value.y;
@@ -133,30 +167,23 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
             
         }
     }
-    let mut new_head = LinkedListNode{ value: SnakeSegment{direction: new_dir, x: x, y: y}, next: Some(head) };
+    let mut new_head = Box::new(LinkedListNode{ value: SnakeSegment{direction: new_dir, x: x, y: y}, next: Some(head) });
     if !unsafe {x == apple_x && y == apple_y} {
         new_head.delete_end();
         match new_head.next {
             None => {},
             Some(ref next_ref) => {
-                let mut cur = next_ref;
-                loop {
-                    if cur.value.x == new_head.value.x && cur.value.y == new_head.value.y {
-                        unsafe { game_over = true; }
-                        break;
-                    }
-                    match cur.next {
-                        None => {break;},
-                        Some(ref next_ref) => {cur = next_ref}
-                    }
-                }
+                let cur = next_ref;
+                let collision = is_pos_in_snake(cur, x, y);
+                unsafe {game_over = collision};
             }
         }
     } else {
+        spawn_apple(&new_head);
         unsafe { score += 1; };
     }
     
-    Box::new(new_head)
+    new_head
 }
 
 fn main() {
