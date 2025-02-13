@@ -1,4 +1,4 @@
-use std::{borrow::{Borrow, BorrowMut}, fmt::{self, Display}};
+use std::{borrow::{Borrow, BorrowMut}, ffi::CString, fmt::{self, Display}};
 const GRID_WIDTH: u32 = 20;
 const GRID_HEIGHT: u32 = 15;
 const GRID_UNIT_SIZE: u8 = 40;
@@ -7,6 +7,7 @@ const APPLE_SIZE: u8 = 30;
 const FRAME_DELTA_TIME_MILIS: u32 = 125;
 static mut apple_x: u32 = 10;
 static mut apple_y: u32 = 7;
+static mut score: u32 = 0;
 
 #[repr(C)]
 #[derive(Clone, Copy)] 
@@ -135,6 +136,8 @@ fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDi
     let mut new_head = LinkedListNode{ value: SnakeSegment{direction: new_dir, x: x, y: y}, next: Some(head) };
     if !unsafe {x == apple_x && y == apple_y} {
         new_head.delete_end();
+    } else {
+        unsafe { score += 1; };
     }
     
     Box::new(new_head)
@@ -146,10 +149,10 @@ fn main() {
     // println!("Hello, world!");
     unsafe {
         init(GRID_WIDTH as i32, GRID_HEIGHT as i32, GRID_UNIT_SIZE, SEGMENT_SIZE, APPLE_SIZE);
-        set_title("test".as_ptr());
         last_time = get_time_milis();
     }
     loop {
+        
         let cur_time: u32;
         unsafe {
             update_SDL();
@@ -163,6 +166,7 @@ fn main() {
             head = handle_game_logic(head, new_dir);
             let mut cur = &head;
             unsafe {
+                set_title(CString::new(format!("score:  {score}").as_str()).unwrap().as_bytes_with_nul().as_ptr());
                 clear_screen();
             }
             loop {
