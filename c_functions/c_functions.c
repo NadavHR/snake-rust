@@ -72,6 +72,9 @@ void render() {
 
 
 void init(int grid_width, int grid_height, uint8_t grid_unit_size, uint8_t segment_size, uint8_t apple_size) {
+    printf("[DEBUG C] Received sizes -> width: %d, height: %d, unit: %d, seg: %d, apple: %d\n", 
+           grid_width, grid_height, grid_unit_size, segment_size, apple_size);
+
     _grid_unit_size = grid_unit_size;
     _apple_size = apple_size;
     _segment_size = segment_size;
@@ -82,14 +85,24 @@ void init(int grid_width, int grid_height, uint8_t grid_unit_size, uint8_t segme
     _height_px = _height_grid * _grid_unit_size - _segment_connection_size; 
     _rect = (SDL_Rect){.h = _height_px, .w = _width_px};
 
+    printf("[DEBUG C] Calculated pixels -> width_px: %d, height_px: %d\n", _width_px, _height_px);
 
-    SDL_Init(SDL_INIT_EVERYTHING);
-    SDL_CreateWindowAndRenderer(_width_px, _height_px, 0, &win, &renderer);
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+        printf("[SDL ERROR] Init Failed: %s\n", SDL_GetError());
+        return;
+    }
 
+    int result = SDL_CreateWindowAndRenderer(_width_px, _height_px, 0, &win, &renderer);
+     if (result < 0) {
+        printf("[SDL ERROR] Window/Renderer Creation Failed: %s\n", SDL_GetError());
+        return;
+    } else {
+        printf("[DEBUG C] Window and Renderer successfully initiated.\n");
+    }
     SDL_RenderSetScale(renderer, 1, 1);
 }
 
-uint32_t get_time_milis() {
+uint32_t get_time_millis() {
     return SDL_GetTicks();
 }
 
@@ -103,7 +116,7 @@ void set_title(char * title) {
 }
 
 void update_SDL(){
-    if (SDL_PollEvent(&window_event))
+    while (SDL_PollEvent(&window_event))
     {
         switch (window_event.type)
         {

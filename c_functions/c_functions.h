@@ -12,7 +12,7 @@ enum SegmentDirection {
 };
 
 void init(int grid_width, int grid_height, uint8_t grid_unit_size, uint8_t segment_size, uint8_t apple_size);
-uint32_t get_time_milis();
+uint32_t get_time_millis();
 void clear_screen();
 void draw_segment(unsigned int segment_x, unsigned int segment_y, enum SegmentDirection dir);
 void draw_apple(unsigned int apple_x, unsigned int apple_y);

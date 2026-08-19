@@ -1,11 +1,11 @@
 use rand::prelude::*;
-use std::{borrow::{Borrow, BorrowMut}, ffi::CString, fmt::{self, Display}};
+use std::{borrow::{Borrow, BorrowMut}, ffi::CString, fmt::{self, Display}, print, time::Duration};
 const GRID_WIDTH: u32 = 20;
 const GRID_HEIGHT: u32 = 15;
 const GRID_UNIT_SIZE: u8 = 40;
 const SEGMENT_SIZE: u8 = 30;
 const APPLE_SIZE: u8 = 30;
-const FRAME_DELTA_TIME_MILIS: u32 = 125;
+const FRAME_DELTA_TIME_MILLIS: u32 = 125;
 const GRID_SEGMENTS_COUNT: u32 = GRID_HEIGHT * GRID_WIDTH;  
 
 static mut apple_x: u32 = 10;
@@ -32,7 +32,7 @@ struct SnakeSegment {
 
 extern "C" {
     fn init(grid_width: i32, grid_height: i32, grid_unit_size: u8, segment_size: u8, apple_size: u8);
-    fn get_time_milis() -> u32;
+    fn get_time_millis() -> u32;
     fn clear_screen();
     fn draw_segment(segment_x: u32, segment_y: u32, dir: SegmentDirection);
     fn draw_apple(apple_x: u32, apple_y: u32);
@@ -189,22 +189,22 @@ fn main() {
     let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::RIGHT, x: 0, y: 0}, next: None });
     let mut last_time: u32;
     let mut next_dir = head.value.direction; 
-
+    println!("hi");
     unsafe {
         init(GRID_WIDTH as i32, GRID_HEIGHT as i32, GRID_UNIT_SIZE, SEGMENT_SIZE, APPLE_SIZE);
-        last_time = get_time_milis();
+        last_time = get_time_millis();
     }
     loop {
         
         let cur_time: u32;
         unsafe {
             update_SDL();
-            cur_time = get_time_milis();
+            cur_time = get_time_millis();
         }
         next_dir = find_new_direction(next_dir);
 
-        
-        if (cur_time - last_time) >= FRAME_DELTA_TIME_MILIS {
+        let delta_time = cur_time - last_time;
+        if delta_time >= FRAME_DELTA_TIME_MILLIS {
             last_time = cur_time;
             head = handle_game_logic(head, next_dir);
             let mut cur = &head;
@@ -225,6 +225,8 @@ fn main() {
                 draw_apple(apple_x, apple_y);
                 render();
             }
+        } else {
+            std::thread::sleep(Duration::from_millis((FRAME_DELTA_TIME_MILLIS - delta_time) as u64));
         }
         unsafe {
             if game_over {
