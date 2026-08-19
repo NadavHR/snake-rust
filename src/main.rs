@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use std::{borrow::{Borrow, BorrowMut}, ffi::CString, fmt::{self, Display}, print, time::Duration};
+use std::{borrow::{Borrow, BorrowMut}, ffi::CString, fmt::{self, Display}, time::Duration};
 const GRID_WIDTH: u32 = 20;
 const GRID_HEIGHT: u32 = 15;
 const GRID_UNIT_SIZE: u8 = 40;
@@ -136,12 +136,10 @@ fn is_pos_in_snake(mut cur: &Box<LinkedListNode<SnakeSegment>>, x: u32, y: u32) 
 }
 
 fn spawn_apple(head: &Box<LinkedListNode<SnakeSegment>>) {
-    // TODO: switch to a normal algorithm without a potentially infinite runtime
     let mut rng = rand::rng();
+    let (mut x, mut y): (u32, u32) = (rng.random(), rng.random()); 
     loop {
-        let mut x: u32 = rng.random();
         x = x % GRID_WIDTH;
-        let mut y: u32 = rng.random();
         y = y % GRID_HEIGHT;
         if !is_pos_in_snake(&head, x, y) {
             unsafe {
@@ -150,8 +148,9 @@ fn spawn_apple(head: &Box<LinkedListNode<SnakeSegment>>) {
             }
             break;
         }
+        x += 1;
+        y += 1;   
     }
-
 }
 
 fn handle_game_logic(head: Box<LinkedListNode<SnakeSegment>>, new_dir: SegmentDirection) -> Box<LinkedListNode<SnakeSegment>> {
@@ -189,7 +188,6 @@ fn main() {
     let mut head: Box<LinkedListNode<SnakeSegment>> = Box::from(LinkedListNode{value: SnakeSegment{direction: SegmentDirection::RIGHT, x: 0, y: 0}, next: None });
     let mut last_time: u32;
     let mut next_dir = head.value.direction; 
-    println!("hi");
     unsafe {
         init(GRID_WIDTH as i32, GRID_HEIGHT as i32, GRID_UNIT_SIZE, SEGMENT_SIZE, APPLE_SIZE);
         last_time = get_time_millis();
@@ -225,8 +223,6 @@ fn main() {
                 draw_apple(apple_x, apple_y);
                 render();
             }
-        } else {
-            std::thread::sleep(Duration::from_millis((FRAME_DELTA_TIME_MILLIS - delta_time) as u64));
         }
         unsafe {
             if game_over {
